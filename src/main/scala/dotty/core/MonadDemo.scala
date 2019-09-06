@@ -1,7 +1,7 @@
 object MonadDemo extends App{
   
-  import delegate monad.IdMonad      //Import delegates only
-  import delegate monad.MyClassMonad
+  import given monad.IdMonad      //Import given only
+  import given monad.MyClassMonad
   import monad.Monad
   
   import misc.types.Id
