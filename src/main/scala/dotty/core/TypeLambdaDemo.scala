@@ -1,4 +1,9 @@
-object TypeLambdaDemoDotty extends App{
+package dotty
+package core
+
+//Just annotating a function with @main is enough
+
+@main def typeLambdaDemo : Unit = {
   trait Functor[F[_]]{  
     def map[A,B](a : F[A])(func : A => B) : F[B]
   }
