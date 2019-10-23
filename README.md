@@ -27,7 +27,7 @@ As of now dotty is officially supported in Visual Studio Code.
 # Side-by-side comparisons
 
 
-#DependentFunctionTypesDemo.scala
+### DependentFunctionTypesDemo.scala
 
 **Scala2 version**
 ```scala
@@ -69,7 +69,7 @@ def extractBaz(f : Foo) : f.Baz = f.baz
 
 val bazExtractor : (f : Foo) => f.Baz = extractBaz
 ```
-#TypeLambdaDemo.scala
+### TypeLambdaDemo.scala
 
 **Scala2 version**
 ```scala
@@ -117,7 +117,7 @@ package core
 
 }
 ```
-#Monad.scala
+### Monad.scala
 
 **Scala2 version**
 ```scala
@@ -160,7 +160,7 @@ trait Monad[F[_]]{
   def (a : F[A]) map[A,B](func : A => B) : F[B] = a.flatMap(func andThen identity)
 }
 ```
-#Semigroup.scala
+### Semigroup.scala
 
 **Scala2 version**
 ```scala
@@ -251,7 +251,7 @@ object SemigroupInstances{
   }
 }
 ```
-#ExtensionMethods.scala
+### ExtensionMethods.scala
 
 **Scala2 version**
 ```scala
@@ -308,7 +308,7 @@ object ExtensionMethodsDemo {
   println(s"Square of $intVal = $squareVal")
 }
 ```
-#SemigroupDemo.scala
+### SemigroupDemo.scala
 
 **Scala2 version**
 ```scala
@@ -346,7 +346,7 @@ import given semigroup.SemigroupInstances._
 }
 
 ```
-#MonadDemo.scala
+### MonadDemo.scala
 
 **Scala2 version**
 ```scala
