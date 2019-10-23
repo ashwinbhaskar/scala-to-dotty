@@ -36,7 +36,7 @@ with open("README.md", "w") as f:
     with open("top-of-readme.md", "r") as top_of_readme:
         f.write(top_of_readme.read() + "\n")
     for (scala_file, dotty_file) in matched_files:
-        f.write("###" + scala_file.name + "\n")
+        f.write("#" + scala_file.name + "\n")
         with open(scala_file, "r") as open_scala_file:
             f.write("**Scala2 version**\n")
             f.write("```scala\n")
