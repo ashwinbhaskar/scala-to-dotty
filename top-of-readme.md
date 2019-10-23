@@ -23,3 +23,6 @@ As of now dotty is officially supported in Visual Studio Code.
  4. Make sure to add `addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.3.3")` to your `plugins.sbt` as done in this project.
  5. All that remains now is telling `sbt` the version of Scala [Dotty in this case] that you want to use. At the time this readme was written
     `0.16.0-RC3` was the latest version. This will keep changing as more stable versions are released. You can track it here https://github.com/lampepfl/dotty/releases
+
+# Side-by-side comparisons
+
