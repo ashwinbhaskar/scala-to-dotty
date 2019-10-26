@@ -1,9 +1,10 @@
 package dotty
 package core
 
+import semigroup.Semigroup
 // To import a given we need to explicitly say that we are importing a given.
 // Everything other than givens in the Semigroup object will be ignored
-import given semigroup.SemigroupInstances._
+import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Option[?]]}
 
 //Just annotating a function with @main is enough
 @main def semigroupDemo : Unit = {

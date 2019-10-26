@@ -16,11 +16,11 @@ trait Semigroup[A] {
 
 // givens are the instances for the types you are interested in
 object SemigroupInstances{
-  given IntAdditionSemigroup as Semigroup[Int] {
+  given intAdditionSemigroup: Semigroup[Int] {
     def (a: Int) combine (b: Int): Int = a + b
   }
 
-  given OptionSemigroup[A : Semigroup] as Semigroup[Option[A]] {
+  given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]] {
     def (a: Option[A]) combine (b: Option[A]) = (a, b) match {
       case (Some(aVal), Some(bVal)) => Some(aVal.combine(bVal))
       case (Some(aVal), None) => Some(aVal)
