@@ -10,7 +10,7 @@ object MonadDemo extends App{
 
   def transform[A,B, F[_] : Monad](value : F[A])(func : A => F[B]) : F[B] = value.flatMap(func)
   val value : MyClass[Int] = new MyClass(1)
-  val transformerFunc : Int => MyClass[Double] = {a : Int => new MyClass(a.toDouble)}
+  val transformerFunc : Int => MyClass[Double] = {(a : Int) => new MyClass(a.toDouble)}
 
 
 
