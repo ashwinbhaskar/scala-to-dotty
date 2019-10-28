@@ -1,4 +1,4 @@
-# Introduction ![Build Status](https://travis-ci.org/ashwinbhaskar/scala-to-dotty.svg?branch=master)
+# Introduction
 
 With dotty almost ready to be released, this project will compare the scala2 ways of doing things and the dotty way of implementing the same. By doing so we hope to learn and teach the differences / similarities between scala2 and dotty.
 
@@ -65,6 +65,202 @@ import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Optio
   println(Option[Int](1).combine(Option[Int](2)))
 }
 
+```
+### Enums.scala
+
+**Scala2 version**
+```scala
+package enums
+
+/**
+Enums help in compile time check for all possible values. There are couple of ways to have enums in Scala 2
+
+1 - By extending scala's built in Enumeration class
+2 - We can use sealed objects
+*/
+
+// Enumeration
+object Week extends Enumeration {
+  val Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday = Value
+}
+
+// Enumeration with custom values and ordering
+object WeekCustom extends Enumeration {
+  val Monday = Value(1, "Mon")
+  val Tuesday = Value(2, "Tue")
+  val Wednesday = Value(3, "Wed")
+  val Thursday = Value(4, "Thur")
+  val Friday = Value(5, "Fri")
+  val Saturday = Value(6, "Sat")
+  val Sunday = Value(0, "Sun")
+}
+
+// Sealed case objects
+
+sealed trait WeekTrait
+case object Monday extends WeekTrait
+case object Tuesday extends WeekTrait
+case object Wednesday extends WeekTrait
+case object Thursday extends WeekTrait
+case object Friday extends WeekTrait
+case object Saturday extends WeekTrait
+case object Sunday extends WeekTrait
+
+
+// Sealed case object with extra fields
+sealed abstract class WeekWithExtraFields(val abbreviation: String,
+                                          val weekDay: Boolean,
+                                          index: Int) {
+  // User defined members
+  def isWeekDay: Boolean = weekDay
+                                          }
+case object MondayWithFields extends WeekWithExtraFields("Mon", true, 1)
+case object TuesdayWithFields extends WeekWithExtraFields("Tue", true, 2)
+case object WednesdayWithFields extends WeekWithExtraFields("Wed", true, 3)
+case object ThursdayWithFields extends WeekWithExtraFields("Thu", true, 4)
+case object FridayWithFields extends WeekWithExtraFields("Fri", true, 5)
+case object SaturdayWithFields extends WeekWithExtraFields("Sat", true, 6)
+case object SundayWithFields extends WeekWithExtraFields("Sun", true, 0)
+
+object EnumOps {
+  /**
+   Positives of Enumeration
+    1 - Number of classes generated is less
+    2 - You can list down all the possible values
+    3 - You can also compare enum values. By default they are ordered by the order they are declared
+  */
+  
+  def displayAllValues(): Unit = {
+    val values = Week.values
+    println(values)
+  }
+
+  // comparedValue will be true
+  var comparedValue = Week.Monday < Week.Sunday
+
+  // comparedValue will be false
+  comparedValue = WeekCustom.Monday < WeekCustom.Sunday
+
+  /**
+    Negatives of Enumeration
+    1 - No exhaustive matching check during compile time.
+    2 - Enumeration have same type after erasure 
+  */
+  
+  // No ehautive matching.. Below function does not return any warnings or failure at compile time
+  def isWeekday(day: Week.Value) = day match {
+    case Week.Monday => true
+  }
+
+  /** 
+  Enumeration have same type after erasure 
+  
+  def test(day: Week.Value) = 
+    println(day)
+  
+  def test(day: WeekCustom.Value) = 
+    println(day)
+
+  Declaring above two functions will result in an error  
+  */
+
+  // -- Sealed case objects
+
+  /** 
+    Postives of Sealed case objects
+    1 - Exhaustive matching check at compile time
+        Below function will cause a warning at compile time
+        def isWeekday(day: Week.Value) = day match {
+          case Week.Monday => true
+        }
+  
+    2 - You can include more fields and user defined members on the enum values. Check `WeekWithExtraFields` for example
+
+  */
+
+  /** 
+    Negatives of Sealed case objects
+    
+    1 - Compiler generates more classes than Enumeration
+    2 - No simple way to retrieve all enum values
+    3 - No default ordering between enum values. However we can do this manually, for example by using the index field.
+  */
+}
+```
+**Dotty version**
+```scala
+package dotty
+package core
+package enums
+
+enum Week {
+  case Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+}
+
+// Parameterized enums
+
+enum WeekWithFields(val abbreviation: String) {
+  case Monday extends WeekWithFields("Mon")
+  case Tuesday extends WeekWithFields("Tue")
+  case Wednesday extends WeekWithFields("Wed")
+  case Thursday extends WeekWithFields("Thur")
+  case Friday extends WeekWithFields("Fri")
+  case Saturday extends WeekWithFields("Sat")
+  case Sunday extends WeekWithFields("Sun")
+}
+
+
+// User Defined members
+// Java Planet example - https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html
+enum Planet(mass: Double, radius: Double) {
+  // User defined members
+  private final val G = 6.67300E-11
+  def surfaceGravity = G * mass / (radius * radius)
+  def surfaceWeight(otherMass: Double) =  otherMass * surfaceGravity
+
+  case Mercury extends Planet(3.303e+23, 2.4397e6)
+  case Venus   extends Planet(4.869e+24, 6.0518e6)
+  case Earth   extends Planet(5.976e+24, 6.37814e6)
+  case Mars    extends Planet(6.421e+23, 3.3972e6)
+  case Jupiter extends Planet(1.9e+27,   7.1492e7)
+  case Saturn  extends Planet(5.688e+26, 6.0268e7)
+  case Uranus  extends Planet(8.686e+25, 2.5559e7)
+  case Neptune extends Planet(1.024e+26, 2.4746e7)
+}
+
+object EnumOps {
+  // to get the unique index of an enum value
+
+  def printOrdinal(day: Week) = {
+    val ordinal = day.ordinal
+    println(s"$day has ordinal = $ordinal")
+  }
+
+
+  /**
+    Positives
+    
+    1 - You can list down all the possible values.
+    2 - User defined members
+    3 - Clear syntax
+   */
+ 
+  def displayAllValues(): Unit = {
+    val values: Array[Week] = Week.values
+    println(values)
+  }
+  
+  // User defined members
+  def weightInDifferentPlanet(weightOnEarth: Float, planet: Planet): Unit = {
+    val mass = weightOnEarth / Planet.Earth.surfaceGravity
+    println(s"Your weight on $planet is ${planet.surfaceWeight(mass)}")
+  }
+
+  /** 
+  Negatives
+  1 - No default ordering of enum values and hence cannot be compared.
+  */
+}
 ```
 ### ExtensionMethods.scala
 
@@ -295,7 +491,7 @@ object TypeLambdaDemoScala extends App{
 package dotty
 package core
 
-//Just annotating a function with @main is enough
+//Annotating a function with @main is enough
 
 @main def typeLambdaDemo : Unit = {
   trait Functor[F[_]]{  
