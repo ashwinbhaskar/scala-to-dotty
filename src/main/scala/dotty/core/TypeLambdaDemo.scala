@@ -1,7 +1,7 @@
 package dotty
 package core
 
-//Just annotating a function with @main is enough
+//Annotating a function with @main is enough
 
 @main def typeLambdaDemo : Unit = {
   trait Functor[F[_]]{  
