@@ -1,4 +1,4 @@
-# Introduction
+# Introduction ![Build Status](https://travis-ci.org/ashwinbhaskar/scala-to-dotty.svg?branch=master)
 
 With dotty almost ready to be released, this project will compare the scala2 ways of doing things and the dotty way of implementing the same. By doing so we hope to learn and teach the differences / similarities between scala2 and dotty.
 
