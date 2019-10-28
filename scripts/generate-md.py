@@ -25,14 +25,14 @@ def match_files(scala_files, dotty_files):
     return matched_files
 
 
-dotty_core = pathlib.Path("./src/main/scala/dotty/core")
-scala_core = pathlib.Path("./src/main/scala/scala2/core")
+dotty_core = pathlib.Path("./../src/main/scala/dotty/core")
+scala_core = pathlib.Path("./../src/main/scala/scala2/core")
 
 all_dotty_core_files = get_all_files(dotty_core)
 all_scala_core_files = get_all_files(scala_core)
 matched_files = match_files(all_scala_core_files, all_dotty_core_files)
 
-with open("README.md", "w") as f:
+with open("./../README.md", "w") as f:
     with open("top-of-readme.md", "r") as top_of_readme:
         f.write(top_of_readme.read() + "\n")
     for (scala_file, dotty_file) in matched_files:
