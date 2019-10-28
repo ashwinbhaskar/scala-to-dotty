@@ -28,3 +28,6 @@ classes/
 .idea
 .idea_modules
 /.worksheet/
+
+# vscode
+.vscode/
