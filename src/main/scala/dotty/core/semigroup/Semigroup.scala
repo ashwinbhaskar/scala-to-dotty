@@ -10,22 +10,19 @@ package semigroup
   2 - givens for the type we care about for the type class
  
  */
-trait Semigroup[A] {
+trait Semigroup[A] 
   def (a: A) combine (b: A): A
-}
+
 
 // givens are the instances for the types you are interested in
-object SemigroupInstances{
-  given intAdditionSemigroup: Semigroup[Int] {
+object SemigroupInstances
+  given intAdditionSemigroup: Semigroup[Int] 
     def (a: Int) combine (b: Int): Int = a + b
-  }
+  
 
-  given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]] {
-    def (a: Option[A]) combine (b: Option[A]) = (a, b) match {
+  given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]] 
+    def (a: Option[A]) combine (b: Option[A]) = (a, b) match 
       case (Some(aVal), Some(bVal)) => Some(aVal.combine(bVal))
       case (Some(aVal), None) => Some(aVal)
       case (None, Some(bVal)) => Some(bVal)
       case (None, None) => None
-    }
-  }
-}
