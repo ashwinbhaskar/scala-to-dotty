@@ -1,4 +1,4 @@
-# Introduction ![Build Status](https://travis-ci.org/ashwinbhaskar/scala-to-dotty.svg?branch=master)
+# Introduction
 
 With dotty almost ready to be released, this project will compare the scala2 ways of doing things and the dotty way of implementing the same. By doing so we hope to learn and teach the differences / similarities between scala2 and dotty.
 
@@ -61,9 +61,8 @@ import semigroup.Semigroup
 import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Option[?]]}
 
 //Just annotating a function with @main is enough
-@main def semigroupDemo : Unit = {
+@main def semigroupDemo : Unit = 
   println(Option[Int](1).combine(Option[Int](2)))
-}
 
 ```
 ### ExtensionMethods.scala
@@ -111,17 +110,16 @@ without having to sub-class it or recompile the original type
 In dotty extension methods are simple and obvious and does not require any implicit class
 */
 
-object RichExtensions {
+object RichExtensions
   def (value: Int) square: Int = value * value
-}
 
-object ExtensionMethodsDemo {
+
+object ExtensionMethodsDemo
   import RichExtensions._
 
   val intVal = 13
   val squareVal = intVal.square
   println(s"Square of $intVal = $squareVal")
-}
 ```
 ### MonadDemo.scala
 
@@ -160,7 +158,7 @@ import monad.{given Monad[MyClass]}
 def transform[A,B,F[_] : Monad](value : F[A], transformerFunc : A => F[B]) : F[B] = value.flatMap(transformerFunc)
 
 //Just annotating a function with @main is enough
-@main def monadDemo : Unit = {
+@main def monadDemo : Unit = 
   val myClassObj : MyClass[Int] = MyClass(1)
   val transformerMyClass : Int => MyClass[Double] = {(a : Int) => MyClass(a.toDouble)}
   val result1 = transform(myClassObj, transformerMyClass)
@@ -172,7 +170,7 @@ def transform[A,B,F[_] : Monad](value : F[A], transformerFunc : A => F[B]) : F[B
   val result2 = transform(ida, transformerId)
   println("flatMap on Id")
   println(result2)
-}
+
 
 
 ```
@@ -247,25 +245,22 @@ package semigroup
   2 - givens for the type we care about for the type class
  
  */
-trait Semigroup[A] {
+trait Semigroup[A] 
   def (a: A) combine (b: A): A
-}
+
 
 // givens are the instances for the types you are interested in
-object SemigroupInstances{
-  given intAdditionSemigroup: Semigroup[Int] {
+object SemigroupInstances
+  given intAdditionSemigroup: Semigroup[Int] 
     def (a: Int) combine (b: Int): Int = a + b
-  }
+  
 
-  given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]] {
-    def (a: Option[A]) combine (b: Option[A]) = (a, b) match {
+  given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]] 
+    def (a: Option[A]) combine (b: Option[A]) = (a, b) match 
       case (Some(aVal), Some(bVal)) => Some(aVal.combine(bVal))
       case (Some(aVal), None) => Some(aVal)
       case (None, Some(bVal)) => Some(bVal)
       case (None, None) => None
-    }
-  }
-}
 ```
 ### TypeLambdaDemo.scala
 
@@ -295,7 +290,7 @@ object TypeLambdaDemoScala extends App{
 package dotty
 package core
 
-//Just annotating a function with @main is enough
+//Annotating a function with @main is enough
 
 @main def typeLambdaDemo : Unit = {
   trait Functor[F[_]]{  
@@ -350,13 +345,13 @@ object MonadInterfaceSyntax{
 ```scala
 package monad
 
-trait Monad[F[_]]{
+trait Monad[F[_]]
   def (a : A) identity[A] : F[A]
 
   def (a : F[A]) flatMap[A,B](func : A => F[B]) : F[B]
 
   def (a : F[A]) map[A,B](func : A => B) : F[B] = a.flatMap(func andThen identity)
-}
+
 ```
 ### DependentFunctionTypesDemo.scala
 
@@ -384,10 +379,9 @@ val bazExtractor : (f : Foo) => f.Baz = extractBaz  // This will not compile wit
 package dotty
 package core
 
-trait Foo{
+trait Foo
   type Baz
   val baz : Baz
-}
 
 // This is dependent method type. This works in Scala 2 as well
 def extractBaz(f : Foo) : f.Baz = f.baz
