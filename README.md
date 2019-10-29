@@ -66,6 +66,47 @@ import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Optio
 }
 
 ```
+### TraitParametersDemo.scala
+
+**Scala2 version**
+```scala
+package scala2
+package core
+
+/*
+Compiling the FooTrait with Scala 2 will give the error:
+trait Foo(val a: String){
+                ^
+       error: traits or objects may not have parameters
+
+trait FooTrait(val foo: String){
+  def fooMessage: String = foo
+  def goo: T
+}
+*/
+
+object TraitParametersDemo extends App{
+  println("trait parameters are not possible with Scala 2")
+}
+```
+**Dotty version**
+```scala
+package dotty
+package core
+
+trait FooTrait[T](val foo: String){
+  def fooMessage: String = foo
+  def goo: T
+}
+
+class Goo extends FooTrait[Int](foo = "Hello Foo"){
+  override def goo: Int = 1
+}
+
+@main def traitParametersDemo: Unit = println(Goo().fooMessage)
+
+
+```
 ### Enums.scala
 
 **Scala2 version**
