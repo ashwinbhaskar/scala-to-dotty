@@ -1,10 +1,9 @@
 package dotty
 package core
 
-trait Foo{
+trait Foo
   type Baz
   val baz : Baz
-}
 
 // This is dependent method type. This works in Scala 2 as well
 def extractBaz(f : Foo) : f.Baz = f.baz
