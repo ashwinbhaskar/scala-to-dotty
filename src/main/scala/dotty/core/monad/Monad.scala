@@ -1,9 +1,8 @@
 package monad
 
-trait Monad[F[_]]{
-  def (a : A) identity[A] : F[A]
+trait Monad[F[_]]
+  def [A](a : A) identity : F[A]
 
-  def (a : F[A]) flatMap[A,B](func : A => F[B]) : F[B]
+  def [A,B](a : F[A]) flatMap(func : A => F[B]) : F[B]
 
-  def (a : F[A]) map[A,B](func : A => B) : F[B] = a.flatMap(func andThen identity)
-}
+  def [A,B](a : F[A]) map(func : A => B) : F[B] = a.flatMap(func andThen identity)

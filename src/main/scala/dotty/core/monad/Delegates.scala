@@ -2,15 +2,14 @@ package monad
 import misc.types.Id
 import misc.MyClass
 
-given idMonad: Monad[Id]{
-  def (a : A) identity[A] : Id[A] = a
+given idMonad: Monad[Id]
+  def [A](a : A) identity : Id[A] = a
 
-  def (a : Id[A]) flatMap[A,B](func : A => Id[B]) : Id[B] = func(a)
-}
+  def [A,B](a : Id[A]) flatMap(func : A => Id[B]) : Id[B] = func(a)
 
-given myClassMonad: Monad[MyClass] {
-  def (a : A) identity[A] : MyClass[A] = MyClass(a)
 
-  def (a : MyClass[A]) flatMap[A,B](func : A => MyClass[B]) : MyClass[B] = func(a.value)
-}
+given myClassMonad: Monad[MyClass]
+  def [A](a : A) identity : MyClass[A] = MyClass(a)
+
+  def [A,B](a : MyClass[A]) flatMap(func : A => MyClass[B]) : MyClass[B] = func(a.value)
 
