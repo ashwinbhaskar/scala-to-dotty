@@ -16,7 +16,7 @@ trait Semigroup[A]
 
 // givens are the instances for the types you are interested in
 object SemigroupInstances
-  given intAdditionSemigroup: Semigroup[Int]
+  given intAddSemigroup: Semigroup[Int]
     def (a: Int) combine (b: Int): Int = a + b
 
   given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]]

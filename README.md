@@ -26,6 +26,8 @@ As of now dotty is officially supported in Visual Studio Code.
 
 # Side-by-side comparisons
 
+{2:5}(build.sbt)
+@[scala](build.sbt)
 
 ### SemigroupDemo.scala
 
@@ -61,7 +63,8 @@ import semigroup.Semigroup
 import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Option[?]]}
 
 //Just annotating a function with @main is enough
-@main def semigroupDemo : Unit = 
+@main def semigroupDemo : Unit =
+  println(1.combine(2)) 
   println(Option[Int](1).combine(Option[Int](2)))
 
 ```
