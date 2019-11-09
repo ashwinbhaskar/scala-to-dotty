@@ -1,5 +1,4 @@
-package dotty
-package core
+package dotty.core
 
 import monad.Monad
 import misc.types.Id
@@ -8,13 +7,13 @@ import monad.{given Monad[Id]}      //Import given only
 import monad.{given Monad[MyClass]}
 
 
-def transform[A,B,F[_] : Monad](value : F[A], transformerFunc : A => F[B]) : F[B] = value.flatMap(transformerFunc)
+def transform[A,B,F[_] : Monad](value : F[A], func : A => F[B]) : F[B] = value.flatMap(func)
 
 //Just annotating a function with @main is enough
 @main def monadDemo : Unit = 
-  val myClassObj : MyClass[Int] = MyClass(1)
-  val transformerMyClass : Int => MyClass[Double] = {(a : Int) => MyClass(a.toDouble)}
-  val result1 = transform(myClassObj, transformerMyClass)
+  val myClass : MyClass[Int] = MyClass(1)
+  val transformerFunc : Int => MyClass[Double] = {(a : Int) => MyClass(a.toDouble)}
+  val result1 = transform(myClass, transformerFunc)
   println("flatMap on MyClass")
   println(result1)
 
