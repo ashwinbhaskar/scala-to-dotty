@@ -3,7 +3,7 @@ package scala2.core
 import scala2.core.monad.MonadInstances._
 import scala2.core.monad.MonadInterfaceSyntax._  //with this import we will import everything..including the implicits
 import scala2.core.monad.Monad
-import scala2.core.misc.MyClass
+import share.MyClass
 
 object MonadDemo extends App {
 

@@ -1,5 +1,5 @@
 package scala2.core.monad
-import scala2.core.misc.MyClass
+import share.MyClass
 
 
 

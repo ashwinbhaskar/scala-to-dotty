@@ -1,8 +1,8 @@
 package dotty.core
 
 import monad.Monad
-import misc.types.Id
-import misc.MyClass
+import share.Id
+import share.MyClass
 import monad.{given Monad[Id]}      //Import given only
 import monad.{given Monad[MyClass]}
 

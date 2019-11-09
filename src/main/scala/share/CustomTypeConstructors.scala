@@ -1,4 +1,4 @@
-package scala2.core.misc
+package share
 
 class MyClass[A](val value : A){
   override def toString = s"MyClass with type ${value.getClass} and value $value"

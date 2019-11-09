@@ -1,6 +1,6 @@
 package monad
-import misc.types.Id
-import misc.MyClass
+import share.Id
+import share.MyClass
 
 given idMonad: Monad[Id]
   def [A](a : A) identity : Id[A] = a
