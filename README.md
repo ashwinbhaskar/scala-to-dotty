@@ -24,10 +24,6 @@ As of now dotty is officially supported in Visual Studio Code.
  5. All that remains now is telling `sbt` the version of Scala [Dotty in this case] that you want to use. At the time this readme was written
     `0.16.0-RC3` was the latest version. This will keep changing as more stable versions are released. You can track it here https://github.com/lampepfl/dotty/releases
 
-# Side-by-side comparisons
-
-{2:5}(build.sbt)
-@[scala](build.sbt)
 
 ### SemigroupDemo.scala
 
