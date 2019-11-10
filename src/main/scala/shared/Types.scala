@@ -1,3 +1,3 @@
-package share
+package shared
 
 type Id[A] = A
