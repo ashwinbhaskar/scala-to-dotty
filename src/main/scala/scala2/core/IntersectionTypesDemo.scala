@@ -19,7 +19,6 @@ trait CustomerInfoClient {
 
 def startServer(dependency: RedisClient with KafkaClient with CustomerInfoClient) = ???
 
-
 /* But `with` is not commutative */
 trait Base {
     def foo: Any
@@ -30,8 +29,6 @@ trait A extends Base {
 trait B extends Base {
     override def foo: Any = "foo"
 }
-
-
 
 def func(ab: A with B): Int = ab.foo // This will not compile with Scala2
 
