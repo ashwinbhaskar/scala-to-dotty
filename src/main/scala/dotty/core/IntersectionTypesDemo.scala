@@ -16,12 +16,11 @@ trait CustomerInfoClient
     type Gender = String
     def getDetails(customerId: String): Future[(Name, Age, Gender)]
 /*
- You can pass along `dependeny` to all the handlers. They will be able to accpe them as
+ You can pass along `dependency` to all the handlers. They will be able to accept them as
  `CustomerInfoClient` or `KafkaClient` or `RedisClient`. This example is inspired from 
  John De Goes's article on the module pattern - http://degoes.net/articles/zio-environment#the-module-pattern
 */
 def startServer(dependency: RedisClient & KafkaClient & CustomerInfoClient) = ???
-
 
 /*
 It's different from with in Scala 2 in the sense that `&` is commutative. Unlike with `with` in scala 2,
