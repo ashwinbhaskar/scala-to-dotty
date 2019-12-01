@@ -1,4 +1,5 @@
 package scala2.core.monad
+import shared.MyClass
 
 
 
@@ -10,7 +11,6 @@ trait Monad[F[_]]{
   def map[A,B](value : F[A])(func : A => B) : F[B] = flatMap(value)(func andThen pure)
 }
 
-import scala2.core.misc.MyClass
 object MonadInstances{
   implicit def myclassMonadInstance : Monad[MyClass] = new Monad[MyClass]{
     def pure[A](a : A) : MyClass[A] = new MyClass(a)

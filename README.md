@@ -144,7 +144,8 @@ import semigroup.Semigroup
 import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Option[?]]}
 
 //Just annotating a function with @main is enough
-@main def semigroupDemo : Unit = 
+@main def semigroupDemo : Unit =
+  println(1.combine(2)) 
   println(Option[Int](1).combine(Option[Int](2)))
 
 ```
