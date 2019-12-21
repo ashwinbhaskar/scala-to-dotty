@@ -145,9 +145,34 @@ import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Optio
 
 //Just annotating a function with @main is enough
 @main def semigroupDemo : Unit =
-  println(1.combine(2)) 
+  println(1.combine(2))
   println(Option[Int](1).combine(Option[Int](2)))
 
+```
+### Conversions.scala
+
+**Scala2 version**
+```scala
+package scala2.core.implicits
+import scala.language.implicitConversions
+
+object Conversions {
+  implicit def int2Integer(i: Int):java.lang.Integer = 
+    java.lang.Integer.valueOf(i)
+}
+```
+**Dotty version**
+```scala
+package dotty.core.implicits
+
+// Because the usage of Type Conversions often are very problematic,
+// it must be created explicitly in this way:
+given Conversion[Int, Integer] = java.lang.Integer.valueOf(_)
+
+
+// Long version, using alias given:
+//given Conversion[Int, Integer] with
+//  def apply(i: Int): Integer = java.lang.Integer.valueOf(i)
 ```
 ### TraitParametersDemo.scala
 
@@ -469,41 +494,42 @@ object ExtensionMethodsDemo
 ```scala
 package scala2.core
 
-object MonadDemo extends App{
+import scala2.core.monad.MonadInstances._
+import scala2.core.monad.MonadInterfaceSyntax._  //with this import we will import everything..including the implicits
+import scala2.core.monad.Monad
+import shared.MyClass
 
-  import scala2.core.monad.MonadInstances._
-  import scala2.core.monad.MonadInterfaceSyntax._  //with this import we will import everything..including the implicits
-  import scala2.core.monad.Monad
-  import scala2.core.misc.MyClass
-
+object MonadDemo extends App {
 
   def transform[A,B, F[_] : Monad](value : F[A])(func : A => F[B]) : F[B] = value.flatMap(func)
-  val value : MyClass[Int] = new MyClass(1)
+  
+  val myClass : MyClass[Int] = new MyClass(1)
   val transformerFunc : Int => MyClass[Double] = {(a : Int) => new MyClass(a.toDouble)}
-
+ // val result1 = transform(myClass, transformerFunc)
+ // println("flatMap on MyClass")
+ // println(result1)
 
 
 }
 ```
 **Dotty version**
 ```scala
-package dotty
-package core
+package dotty.core
 
 import monad.Monad
-import misc.types.Id
-import misc.MyClass
+import shared.Id
+import shared.MyClass
 import monad.{given Monad[Id]}      //Import given only
 import monad.{given Monad[MyClass]}
 
 
-def transform[A,B,F[_] : Monad](value : F[A], transformerFunc : A => F[B]) : F[B] = value.flatMap(transformerFunc)
+def transform[A,B,F[_] : Monad](value : F[A], func : A => F[B]) : F[B] = value.flatMap(func)
 
 //Just annotating a function with @main is enough
 @main def monadDemo : Unit = 
-  val myClassObj : MyClass[Int] = MyClass(1)
-  val transformerMyClass : Int => MyClass[Double] = {(a : Int) => MyClass(a.toDouble)}
-  val result1 = transform(myClassObj, transformerMyClass)
+  val myClass : MyClass[Int] = MyClass(1)
+  val transformerFunc : Int => MyClass[Double] = {(a : Int) => MyClass(a.toDouble)}
+  val result1 = transform(myClass, transformerFunc)
   println("flatMap on MyClass")
   println(result1)
 
@@ -514,6 +540,36 @@ def transform[A,B,F[_] : Monad](value : F[A], transformerFunc : A => F[B]) : F[B
   println(result2)
 
 
+```
+### ImplicitsDemo.scala
+
+**Scala2 version**
+```scala
+package scala2.core
+
+import scala2.core.implicits.Conversions._
+import scala.language.implicitConversions // use with care !
+import shared.printInteger
+
+// Look for difference in scala.core.implicits.Conversions.scala
+object ImplicitsDemo extends App {
+  val i = 1
+  printInteger(i)
+}
+```
+**Dotty version**
+```scala
+package dotty.core
+
+import implicits.given
+import scala.language.implicitConversions // use with care !
+import shared.printInteger
+
+// Look for difference in dotty.core.implicits.Conversions.scala
+@main def implicitsDemo : Unit =
+  val i = 1
+  printInteger(i)
+  
 ```
 ### Semigroup.scala
 
@@ -592,7 +648,7 @@ trait Semigroup[A]
 
 // givens are the instances for the types you are interested in
 object SemigroupInstances
-  given intAdditionSemigroup: Semigroup[Int]
+  given intAddSemigroup: Semigroup[Int]
     def (a: Int) combine (b: Int): Int = a + b
 
   given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]]
@@ -655,6 +711,7 @@ package core
 **Scala2 version**
 ```scala
 package scala2.core.monad
+import shared.MyClass
 
 
 
@@ -666,7 +723,6 @@ trait Monad[F[_]]{
   def map[A,B](value : F[A])(func : A => B) : F[B] = flatMap(value)(func andThen pure)
 }
 
-import scala2.core.misc.MyClass
 object MonadInstances{
   implicit def myclassMonadInstance : Monad[MyClass] = new Monad[MyClass]{
     def pure[A](a : A) : MyClass[A] = new MyClass(a)
