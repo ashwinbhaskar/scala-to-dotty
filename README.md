@@ -156,22 +156,34 @@ import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Optio
 package scala2.core.implicits
 import scala.language.implicitConversions
 
+/*
+The explicit null check is only done because we are compiling all the code with dotty with -Yexplicit-nulls flag enabled
+*/
 object Conversions {
   implicit def int2Integer(i: Int):java.lang.Integer = 
-    java.lang.Integer.valueOf(i)
+    java.lang.Integer.valueOf(i) match {
+      case a: Integer => a
+      case null => throw new Exception("Cannot convert null to integer value")
+    }
 }
 ```
 **Dotty version**
 ```scala
 package dotty.core.implicits
 
-// Because the usage of Type Conversions often are very problematic,
-// it must be created explicitly in this way:
-given Conversion[Int, Integer] = java.lang.Integer.valueOf(_)
+/*Because the usage of Type Conversions often are very problematic,
+ it must be created explicitly in this way:
+ Also notice that the pattern matching. This is required because we have enabled the compiler option -Yexplicit-nulls
+ This has an effect on java interop as well. All the reference types in java are nullable. To keep that consistent with the 
+ Type System of Dotty, the java types are patched with `UncheckedNull`(Unchecked Null is a type alias for Null) 
+ java.lang.Integer.valueOf(_) is returns Integer | UncheckedNull*/
+given Conversion[Int, Integer] = java.lang.Integer.valueOf(_) match
+    case a: java.lang.Integer => a
+    case null => throw new Exception("Can't convert null to Integer value") 
 
 
 // Long version, using alias given:
-//given Conversion[Int, Integer] with
+// given Conversion[Int, Integer] with
 //  def apply(i: Int): Integer = java.lang.Integer.valueOf(i)
 ```
 ### TraitParametersDemo.scala
