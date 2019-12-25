@@ -583,6 +583,92 @@ import shared.printInteger
   printInteger(i)
   
 ```
+### ImplicitFunctionTypesDemo.scala
+
+**Scala2 version**
+```scala
+package scala2
+package core
+
+/*
+Having an implicit Function type is not possible in Scala2
+*/
+
+/*
+This will NOT compile with scala 2
+import scala.concurrent.ExecutionContext
+type Executable[T] = (implicit a: ExecutionContext) => T
+*/
+
+//To implement what was implemented in the Dotty version we will have to do this
+import scala.concurrent.ExecutionContext
+
+/*We will need to `explicitely` tell that we need an implict of type ExecutionContext in the declaration site.
+Imagine doing this in a large code base where in you might need to pass down implicits all the way down to the actual method using it.
+That will force you to add the implicit parameters in the declaration site for all the methods propaging the implicit.
+That definitely is boiler plate
+*/
+def foo(x: Int)(implicit ec: ExecutionContext): Int = ???
+
+//In the Dotty version we spoke about a work around when assigning a function with implicit parameter to a val when using Scala 2
+type Environment = String
+
+//But the function type does not carry any information about the implicitness of the the parameters of the type `Environment`
+val adminIds: Environment => List[Int] = {
+    implicit env: Environment => if(env == "staging") List(1,2,3)
+        else List(4,5,6)
+}
+
+object ImplicitFunctionTypes extends App{
+    println("Making a function explitely of implicit function type is not possible in Scala 2")
+}
+
+```
+**Dotty version**
+```scala
+package dotty
+package core
+
+/*
+
+Implicit Functions  are functions with only implicit parameters. Their type is `Implicit Function Type`.
+
+The motivation for Implicit function types is to reduce boiler plate code on the declaration site when using implicits parameters. Martin Odersky's blog
+(https://www.scala-lang.org/blog/2016/12/07/implicit-function-types.html) on the need for implicit function types explains the motivation well.
+
+Implicit parameters, by nature, do not require you to `explicitely` pass them at the call site. This does reduce the boiler plate but 
+we still end up with having to define the implicit parameters at the declaration site.
+
+Implicit Function Types help you to remove that extra boiler plate of having to define the implicit parameters at the declaration site.
+*/
+
+//Example taken from https://dotty.epfl.ch/docs/reference/contextual/implicit-function-types.html
+
+import scala.concurrent.ExecutionContext
+
+type Executable[T] = (given ExecutionContext) => T
+
+/*
+Note that you don't need to tell foo `explicitely` to accept an implicit ExecutionType.
+*/
+def foo(x: Int): Executable[Int] = ??? //The body of the function will have access to an ExecutionContext
+
+/*
+With implicit function types you are not restricted to have a `def` whenever you need an implicit argument.
+NOTE - There is a hack in scala 2 to make the below work with a val. You can see it in the Scala Version
+*/
+
+type Environment = String
+
+//The type clearly says that this is an Implicit Function Type
+val adminIds: (given Environment) => List[Int] = 
+    if(summon[Environment] == "staging") List(1,2,3)
+    else List(4,5,6)
+
+@main def implicitFunctionTypes = 
+    given Environment = "staging"
+    println(adminIds)
+```
 ### Semigroup.scala
 
 **Scala2 version**
@@ -759,6 +845,40 @@ trait Monad[F[_]]
   def [A,B](a : F[A]) flatMap(func : A => F[B]) : F[B]
 
   def [A,B](a : F[A]) map(func : A => B) : F[B] = a.flatMap(func andThen identity)
+
+```
+### ExplicitNullsDemo.scala
+
+**Scala2 version**
+```scala
+package scala2
+package core
+
+object ExplicitNullsDemo extends App{
+    println("Scala2 does not have explicit nulls feature")
+}
+```
+**Dotty version**
+```scala
+package dotty
+package core
+
+@main def explicitNullsDemo: Unit = 
+
+    /*
+    Explicit Nulls is an opt-in feature which can be enabled with -Yexplicit-nulls compiler flag
+    */
+    val foo: String | Null = null
+    //The statemented below will not compile because we have enabled the compiler flag -Yexplicit-nulls
+    //val baz: String = null
+
+    
+    //val baz: java.lang.Integer = java.lang.Integer.valueOf(0) : This will not compile!
+    /*
+    How do you get java interop to work with -Yexplicit-nulls compiler flag?
+    When a java class is loaded, either from source or bytecode, it's types are patched so that they remain nullable.
+    The patching is done by making are referrence types nullable. UncheckedNull is a type alias for Null.*/
+    val baz: java.lang.Integer | UncheckedNull = java.lang.Integer.valueOf(0)
 
 ```
 ### DependentFunctionTypesDemo.scala
