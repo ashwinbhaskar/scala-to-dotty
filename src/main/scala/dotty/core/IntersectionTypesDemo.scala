@@ -11,10 +11,7 @@ trait KafkaClient
     def push[A](topic: String, message: A): Future[Unit]
 
 trait CustomerInfoClient
-    type Name = String
-    type Age = Int
-    type Gender = String
-    def getDetails(customerId: String): Future[(Name, Age, Gender)]
+    def getName(customerId: String): Future[String]
 /*
  You can pass along `dependency` to all the handlers. They will be able to accept them as
  `CustomerInfoClient` or `KafkaClient` or `RedisClient`.
