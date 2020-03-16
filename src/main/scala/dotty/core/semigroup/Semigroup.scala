@@ -19,7 +19,7 @@ object SemigroupInstances:
   given Semigroup[Int]:
     def (a: Int) combine (b: Int): Int = a + b
 
-  given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]]
+  given optionSemigroup[A : Semigroup] as  Semigroup[Option[A]]
     def (a: Option[A]) combine (b: Option[A]) = 
       (a, b) match 
         case (Some(aVal), Some(bVal)) => Some(aVal.combine(bVal))
