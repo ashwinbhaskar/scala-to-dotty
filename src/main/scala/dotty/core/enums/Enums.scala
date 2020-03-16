@@ -2,12 +2,12 @@ package dotty
 package core
 package enums
 
-enum Week
+enum Week:
   case Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 
 // Parameterized enums
 
-enum WeekWithFields(val abbreviation: String)
+enum WeekWithFields(val abbreviation: String):
   case Monday extends WeekWithFields("Mon")
   case Tuesday extends WeekWithFields("Tue")
   case Wednesday extends WeekWithFields("Wed")
@@ -20,7 +20,7 @@ enum WeekWithFields(val abbreviation: String)
 
 // User Defined members
 // Java Planet example - https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html
-enum Planet(mass: Double, radius: Double)
+enum Planet(mass: Double, radius: Double):
   // User defined members
   private final val G = 6.67300E-11
   def surfaceGravity = G * mass / (radius * radius)
@@ -36,7 +36,7 @@ enum Planet(mass: Double, radius: Double)
   case Neptune extends Planet(1.024e+26, 2.4746e7)
 
 
-object EnumOps 
+object EnumOps:
   // to get the unique index of an enum value
 
   def printOrdinal(day: Week) = 

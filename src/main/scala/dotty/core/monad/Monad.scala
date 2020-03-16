@@ -1,6 +1,6 @@
 package monad
 
-trait Monad[F[_]]
+trait Monad[F[_]]:
   def [A](a : A) identity : F[A]
 
   def [A,B](a : F[A]) flatMap(func : A => F[B]) : F[B]

@@ -10,13 +10,13 @@ package semigroup
   2 - givens for the type we care about for the type class
  
  */
-trait Semigroup[A]
+trait Semigroup[A]:
   def (a: A) combine (b: A): A
 
 
 // givens are the instances for the types you are interested in
-object SemigroupInstances
-  given intAddSemigroup: Semigroup[Int]
+object SemigroupInstances:
+  given Semigroup[Int]:
     def (a: Int) combine (b: Int): Int = a + b
 
   given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]]
