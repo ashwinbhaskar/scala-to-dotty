@@ -4,4 +4,4 @@ jdk:
   - openjdk8
 
 script:
-  - sbt 'set scalaVersion := dottyLatestNightlyBuild.get' compile
+  - sbt 'set scalaVersion := "0.22.0-RC1"' compile
