@@ -75,17 +75,14 @@ import scala.concurrent.Future
 `&` is similar to `with` in scala 2 when only used as class composition
 */
 
-trait RedisClient
+trait RedisClient:
     def increment(key: String): Future[Unit]
 
-trait KafkaClient
+trait KafkaClient:
     def push[A](topic: String, message: A): Future[Unit]
 
-trait CustomerInfoClient
-    type Name = String
-    type Age = Int
-    type Gender = String
-    def getDetails(customerId: String): Future[(Name, Age, Gender)]
+trait CustomerInfoClient:
+    def getName(customerId: String): Future[String]
 /*
  You can pass along `dependency` to all the handlers. They will be able to accept them as
  `CustomerInfoClient` or `KafkaClient` or `RedisClient`.
@@ -97,11 +94,11 @@ It's different from with in Scala 2 in the sense that `&` is commutative. Unlike
 both (???: A & B).foo and (???: B & A).foo return type Int
 */
 
-trait Base
+trait Base:
     def foo: Any
-trait A extends Base
+trait A extends Base:
     override def foo: Int = 1
-trait B extends Base
+trait B extends Base:
     override def foo: Any = "foo"
 
 def func(ab: A & B): Int = ab.foo //returns Int
@@ -226,13 +223,13 @@ trait FooTrait[T](val foo: String){
 /*
 When a class extends a trait with parameters it has to pass in the parameter values
 */
-class Goo extends FooTrait[Int](foo = "Hello from Foo")
+class Goo extends FooTrait[Int](foo = "Hello from Foo"):
   override def goo: Int = 1
 
 /*
 Traits cannot pass arguments to parent traits
 */
-trait BazTrait[T] extends FooTrait[T]
+trait BazTrait[T] extends FooTrait[T]:
   def baz: String
 
 /*But how do you make a class extend BazTrait?
@@ -246,7 +243,7 @@ trait BazTrait[T] extends FooTrait[T]
  The correct way is to make Zoo extend both Greeting and Formal greeting in any order:(
 */
 
-class Zoo extends FooTrait[String](foo = "Hello from Foo") with BazTrait[String]
+class Zoo extends FooTrait[String](foo = "Hello from Foo") with BazTrait[String]:
   override def goo: String = "Hello from Goo"
   override def baz: String = "Hello from Baz"
 
@@ -381,12 +378,12 @@ package dotty
 package core
 package enums
 
-enum Week
+enum Week:
   case Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 
 // Parameterized enums
 
-enum WeekWithFields(val abbreviation: String)
+enum WeekWithFields(val abbreviation: String):
   case Monday extends WeekWithFields("Mon")
   case Tuesday extends WeekWithFields("Tue")
   case Wednesday extends WeekWithFields("Wed")
@@ -399,7 +396,7 @@ enum WeekWithFields(val abbreviation: String)
 
 // User Defined members
 // Java Planet example - https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html
-enum Planet(mass: Double, radius: Double)
+enum Planet(mass: Double, radius: Double):
   // User defined members
   private final val G = 6.67300E-11
   def surfaceGravity = G * mass / (radius * radius)
@@ -415,7 +412,7 @@ enum Planet(mass: Double, radius: Double)
   case Neptune extends Planet(1.024e+26, 2.4746e7)
 
 
-object EnumOps 
+object EnumOps:
   // to get the unique index of an enum value
 
   def printOrdinal(day: Week) = 
@@ -490,10 +487,10 @@ without having to sub-class it or recompile the original type
 In dotty extension methods are simple and obvious and does not require any implicit class
 */
 
-object RichExtensions
+object RichExtensions:
   def (value: Int) square: Int = value * value
 
-object ExtensionMethodsDemo
+object ExtensionMethodsDemo:
   import RichExtensions._
 
   val intVal = 13
@@ -740,16 +737,16 @@ package semigroup
   2 - givens for the type we care about for the type class
  
  */
-trait Semigroup[A]
+trait Semigroup[A]:
   def (a: A) combine (b: A): A
 
 
 // givens are the instances for the types you are interested in
-object SemigroupInstances
-  given intAddSemigroup: Semigroup[Int]
+object SemigroupInstances:
+  given Semigroup[Int]:
     def (a: Int) combine (b: Int): Int = a + b
 
-  given optionSemigroup[A : Semigroup]:  Semigroup[Option[A]]
+  given optionSemigroup[A : Semigroup] as  Semigroup[Option[A]]
     def (a: Option[A]) combine (b: Option[A]) = 
       (a, b) match 
         case (Some(aVal), Some(bVal)) => Some(aVal.combine(bVal))
@@ -788,7 +785,7 @@ package core
 //Annotating a function with @main is enough
 
 @main def typeLambdaDemo : Unit = 
-  trait Functor[F[_]]
+  trait Functor[F[_]]:
     def map[A,B](a : F[A])(func : A => B) : F[B]
 
   def functionFunctor[X] = 
@@ -839,7 +836,7 @@ object MonadInterfaceSyntax{
 ```scala
 package monad
 
-trait Monad[F[_]]
+trait Monad[F[_]]:
   def [A](a : A) identity : F[A]
 
   def [A,B](a : F[A]) flatMap(func : A => F[B]) : F[B]
