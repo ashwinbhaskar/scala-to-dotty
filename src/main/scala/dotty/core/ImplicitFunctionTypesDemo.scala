@@ -18,7 +18,7 @@ Implicit Function Types help you to remove that extra boiler plate of having to 
 
 import scala.concurrent.ExecutionContext
 
-type Executable[T] = (given ExecutionContext) => T
+type Executable[T] = (ec: ExecutionContext) ?=> T
 
 /*
 Note that you don't need to tell foo `explicitely` to accept an implicit ExecutionType.
@@ -32,8 +32,8 @@ NOTE - There is a hack in scala 2 to make the below work with a val. You can see
 
 type Environment = String
 
-//The type clearly says that this is an Implicit Function Type
-val adminIds: (given Environment) => List[Int] = 
+//The type of the function says that an implict Environment will be available
+val adminIds: (ec: Environment) ?=> List[Int] = 
     if(summon[Environment] == "staging") List(1,2,3)
     else List(4,5,6)
 
