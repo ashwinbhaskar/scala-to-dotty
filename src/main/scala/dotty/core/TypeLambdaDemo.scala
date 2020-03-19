@@ -9,7 +9,7 @@ package core
 
   def functionFunctor[X] = 
     //Much cleaner syntax compared to Scala
-    new Functor[[A] =>> Function1[X,A]] with
+    new Functor[[A] =>> Function1[X,A]]:
       def map[A,B](a : X =>A)(func : A => B) : X => B = a andThen func
   
 

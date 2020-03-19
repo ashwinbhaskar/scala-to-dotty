@@ -1,7 +1,7 @@
 package dotty
 package core
 
-trait Foo
+trait Foo:
   type Baz
   val baz : Baz
 
