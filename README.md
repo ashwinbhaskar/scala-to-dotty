@@ -570,7 +570,7 @@ object ImplicitsDemo extends App {
 ```scala
 package dotty.core
 
-import implicits.given
+import implicits.{given _}
 import scala.language.implicitConversions // use with care !
 import shared.printInteger
 
@@ -643,7 +643,7 @@ Implicit Function Types help you to remove that extra boiler plate of having to 
 
 import scala.concurrent.ExecutionContext
 
-type Executable[T] = (given ExecutionContext) => T
+type Executable[T] = (ec: ExecutionContext) ?=> T
 
 /*
 Note that you don't need to tell foo `explicitely` to accept an implicit ExecutionType.
@@ -657,8 +657,8 @@ NOTE - There is a hack in scala 2 to make the below work with a val. You can see
 
 type Environment = String
 
-//The type clearly says that this is an Implicit Function Type
-val adminIds: (given Environment) => List[Int] = 
+//The type of the function says that an implict Environment will be available
+val adminIds: (ec: Environment) ?=> List[Int] = 
     if(summon[Environment] == "staging") List(1,2,3)
     else List(4,5,6)
 
@@ -746,7 +746,7 @@ object SemigroupInstances:
   given Semigroup[Int]:
     def (a: Int) combine (b: Int): Int = a + b
 
-  given optionSemigroup[A : Semigroup] as  Semigroup[Option[A]]
+  given optionSemigroup[A : Semigroup] as  Semigroup[Option[A]]:
     def (a: Option[A]) combine (b: Option[A]) = 
       (a, b) match 
         case (Some(aVal), Some(bVal)) => Some(aVal.combine(bVal))
@@ -790,7 +790,7 @@ package core
 
   def functionFunctor[X] = 
     //Much cleaner syntax compared to Scala
-    new Functor[[A] =>> Function1[X,A]] with
+    new Functor[[A] =>> Function1[X,A]]:
       def map[A,B](a : X =>A)(func : A => B) : X => B = a andThen func
   
 
@@ -904,7 +904,7 @@ val bazExtractor : (f : Foo) => f.Baz = extractBaz  // This will not compile wit
 package dotty
 package core
 
-trait Foo
+trait Foo:
   type Baz
   val baz : Baz
 
