@@ -27,161 +27,100 @@ As of now dotty is officially supported in Visual Studio Code.
 # Side-by-side comparisons
 
 
-### IntersectionTypesDemo.scala
+### MonadDemo.scala
 
 **Scala2 version**
 ```scala
-package scala2
-package core
+package scala2.core
 
-import scala.concurrent.Future
-trait RedisClient {
-    def increment(key: String): Future[Unit]
+import scala2.core.monad.MonadInstances._
+import scala2.core.monad.MonadInterfaceSyntax._  //with this import we will import everything..including the implicits
+import scala2.core.monad.Monad
+import shared.MyClass
+
+object MonadDemo extends App {
+
+  def transform[A,B, F[_] : Monad](value : F[A])(func : A => F[B]) : F[B] = value.flatMap(func)
+  
+  val myClass : MyClass[Int] = new MyClass(1)
+  val transformerFunc : Int => MyClass[Double] = {(a : Int) => new MyClass(a.toDouble)}
+ // val result1 = transform(myClass, transformerFunc)
+ // println("flatMap on MyClass")
+ // println(result1)
+
+
 }
-
-trait KafkaClient {
-    def push[A](topic: String, message: A): Future[Unit]
-}
-
-trait CustomerInfoClient {
-    type Name = String
-    type Age = Int
-    type Gender = String
-    def getDetails(customerId: String): Future[(Name, Age, Gender)]
-}
-
-def startServer(dependency: RedisClient with KafkaClient with CustomerInfoClient) = ???
-
-/* But `with` is not commutative */
-trait Base {
-    def foo: Any
-}
-trait A extends Base {
-    override def foo: Int = 1
-}
-trait B extends Base {
-    override def foo: Any = "foo"
-}
-
-def func(ab: A with B): Int = ab.foo // This will not compile with Scala2
-
-def func(ba: B with A): Int = ba.foo    //return Int
 ```
 **Dotty version**
 ```scala
-import scala.concurrent.Future
+package dotty.core
 
-/*
-`&` is similar to `with` in scala 2 when only used as class composition
-*/
+import monad.Monad
+import shared.Id
+import shared.MyClass
+import monad.{given Monad[Id]}      //Import given only
+import monad.{given Monad[MyClass]}
 
-trait RedisClient:
-    def increment(key: String): Future[Unit]
 
-trait KafkaClient:
-    def push[A](topic: String, message: A): Future[Unit]
+def transform[A,B,F[_] : Monad](value : F[A], func : A => F[B]) : F[B] = value.flatMap(func)
 
-trait CustomerInfoClient:
-    def getName(customerId: String): Future[String]
-/*
- You can pass along `dependency` to all the handlers. They will be able to accept them as
- `CustomerInfoClient` or `KafkaClient` or `RedisClient`.
-*/
-def startServer(dependency: RedisClient & KafkaClient & CustomerInfoClient) = ???
+//Just annotating a function with @main is enough
+@main def monadDemo : Unit = 
+  val myClass : MyClass[Int] = MyClass(1)
+  val transformerFunc : Int => MyClass[Double] = {(a : Int) => MyClass(a.toDouble)}
+  val result1 = transform(myClass, transformerFunc)
+  println("flatMap on MyClass")
+  println(result1)
 
-/*
-It's different from with in Scala 2 in the sense that `&` is commutative. Unlike with `with` in scala 2,
-both (???: A & B).foo and (???: B & A).foo return type Int
-*/
-
-trait Base:
-    def foo: Any
-trait A extends Base:
-    override def foo: Int = 1
-trait B extends Base:
-    override def foo: Any = "foo"
-
-def func(ab: A & B): Int = ab.foo //returns Int
-
-def func(ba: B & A): Int = ba.foo //return Int
+  val ida : Id[Int] = 1
+  val transformerId : Int => Double = _.toDouble
+  val result2 = transform(ida, transformerId)
+  println("flatMap on Id")
+  println(result2)
 
 
 ```
-### SemigroupDemo.scala
+### DependentFunctionTypesDemo.scala
 
 **Scala2 version**
 ```scala
 package scala2
 package core
 
-/**
-  To use the semigroup typeclass we import the sytax and the instances of type we care about 
- */
-import scala2.core.semigroup._
-import semigroup.SemigroupInstances._
-import semigroup.SemigroupSyntax._
-
-object SemigroupDemo extends App {
-  //using Interface Syntax
-  println(1.combine(2))
-  println(Option[Int](1).combine(Option[Int](2)))
-
-  //using interface object
-  Semigroup.combine(1, 2)
+trait Foo{
+  type Baz
+  val baz : Baz
 }
+
+//This is dependant method type. This works.
+def extractBaz(f : Foo) : f.Baz = f.baz
+
+//But what if you wanted a function type for extractBax?
+//That is not possible with Scala 2 because there is no type that could describe it.
+//https://dotty.epfl.ch/docs/reference/new-types/dependent-function-types.html
+
+val bazExtractor : (f : Foo) => f.Baz = extractBaz  // This will not compile with Scala 2
 ```
 **Dotty version**
 ```scala
 package dotty
 package core
 
-import semigroup.Semigroup
-// To import a given we need to explicitly say that we are importing a given.
-// Everything other than givens in the Semigroup object will be ignored
-import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Option[?]]}
+trait Foo:
+  type Baz
+  val baz : Baz
 
-//Just annotating a function with @main is enough
-@main def semigroupDemo : Unit =
-  println(1.combine(2))
-  println(Option[Int](1).combine(Option[Int](2)))
+// This is dependent method type. This works in Scala 2 as well
+def extractBaz(f : Foo) : f.Baz = f.baz
 
-```
-### Conversions.scala
+// But what if you wanted a function type for extractBaz?
+// It was not possible to do that in Scala 2.
+// But with dependent function types introduced in dotty, this is possible.
+// Read more about dependent function types here
+// https://dotty.epfl.ch/docs/reference/new-types/dependent-function-types.html
 
-**Scala2 version**
-```scala
-package scala2.core.implicits
-import scala.language.implicitConversions
+val bazExtractor : (f : Foo) => f.Baz = extractBaz
 
-/*
-The explicit null check is only done because we are compiling all the code with dotty with -Yexplicit-nulls flag enabled
-*/
-object Conversions {
-  implicit def int2Integer(i: Int):java.lang.Integer = 
-    java.lang.Integer.valueOf(i) match {
-      case a: Integer => a
-      case null => throw new Exception("Cannot convert null to integer value")
-    }
-}
-```
-**Dotty version**
-```scala
-package dotty.core.implicits
-
-/*Because the usage of Type Conversions often are very problematic,
- it must be created explicitly in this way:
- Also notice that the pattern matching. This is required because we have enabled the compiler option -Yexplicit-nulls
- This has an effect on java interop as well. All the reference types in java are nullable. To keep that consistent with the 
- Type System of Dotty, the java types are patched with `UncheckedNull`(Unchecked Null is a type alias for Null) 
- java.lang.Integer.valueOf(_) is returns Integer | UncheckedNull*/
-given Conversion[Int, Integer] = java.lang.Integer.valueOf(_) match
-    case a: java.lang.Integer => a
-    case null => throw new Exception("Can't convert null to Integer value") 
-
-
-// Long version, using alias given:
-// given Conversion[Int, Integer] with
-//  def apply(i: Int): Integer = java.lang.Integer.valueOf(i)
 ```
 ### TraitParametersDemo.scala
 
@@ -248,6 +187,223 @@ class Zoo extends FooTrait[String](foo = "Hello from Foo") with BazTrait[String]
   override def baz: String = "Hello from Baz"
 
 @main def traitParametersDemo: Unit = println(Goo().fooMessage)
+
+
+```
+### Monad.scala
+
+**Scala2 version**
+```scala
+package scala2.core.monad
+import shared.MyClass
+
+
+
+trait Monad[F[_]]{
+  def pure[A](a : A) : F[A]
+
+  def flatMap[A,B](value : F[A])(func : A => F[B]) : F[B]
+
+  def map[A,B](value : F[A])(func : A => B) : F[B] = flatMap(value)(func andThen pure)
+}
+
+object MonadInstances{
+  implicit def myclassMonadInstance : Monad[MyClass] = new Monad[MyClass]{
+    def pure[A](a : A) : MyClass[A] = new MyClass(a)
+
+    def flatMap[A,B](value : MyClass[A])(func : A => MyClass[B]) : MyClass[B] = func(value.value)
+  }
+}
+
+object MonadInterfaceSyntax{
+  implicit class MonadOps[F[_] : Monad, A](value : F[A]){
+    def flatMap[B](func : A => F[B]) : F[B] = implicitly[Monad[F]].flatMap(value)(func)
+  }
+}
+```
+**Dotty version**
+```scala
+package monad
+
+trait Monad[F[_]]:
+  extension [A](a: A) def identity : F[A]
+
+  extension [A, B](a : F[A]) def flatMap(func : A => F[B]) : F[B]
+
+  extension [A, B](a : F[A]) def map(func : A => B) : F[B] = a.flatMap(func andThen identity)
+
+```
+### ExtensionMethods.scala
+
+**Scala2 version**
+```scala
+package scala2
+package core
+
+/**
+Extension Methods helps developers to add new methods to an existing type
+without having to sub-class it or recompile the original type
+*/
+
+/** 
+In scala2 extension methods were implemented using the implicit class 
+approach
+*/
+
+object RichExtensions {
+  implicit class RichInt(value: Int) {
+    def square = value * value
+  }
+}
+
+object ExtensionMethodsDemo {
+  import RichExtensions._
+
+  val intVal = 13
+  val squareVal = intVal.square
+  println(s"Square of $intVal = $squareVal")
+}
+```
+**Dotty version**
+```scala
+package dotty
+package core
+
+/**
+Extension Methods helps developers to add new methods to an existing type
+without having to sub-class it or recompile the original type
+*/
+
+/** 
+In dotty extension methods are simple and obvious and does not require any implicit class
+*/
+
+extension (value: Int)
+  def square: Int = value * value
+
+object ExtensionMethodsDemo:
+  import dotty.core._
+
+  val intVal = 13
+  val squareVal = intVal.square
+  println(s"Square of $intVal = $squareVal")
+```
+### SemigroupDemo.scala
+
+**Scala2 version**
+```scala
+package scala2
+package core
+
+/**
+  To use the semigroup typeclass we import the sytax and the instances of type we care about 
+ */
+import scala2.core.semigroup._
+import semigroup.SemigroupInstances._
+import semigroup.SemigroupSyntax._
+
+object SemigroupDemo extends App {
+  //using Interface Syntax
+  println(1.combine(2))
+  println(Option[Int](1).combine(Option[Int](2)))
+
+  //using interface object
+  Semigroup.combine(1, 2)
+}
+```
+**Dotty version**
+```scala
+package dotty
+package core
+
+import semigroup.Semigroup
+// To import a given we need to explicitly say that we are importing a given.
+// Everything other than givens in the Semigroup object will be ignored
+import semigroup.SemigroupInstances.{given Semigroup[Int], given Semigroup[Option[?]]}
+
+//Just annotating a function with @main is enough
+@main def semigroupDemo : Unit =
+  println(1.combine(2))
+  println(Option[Int](1).combine(Option[Int](2)))
+
+```
+### IntersectionTypesDemo.scala
+
+**Scala2 version**
+```scala
+package scala2
+package core
+
+import scala.concurrent.Future
+trait RedisClient {
+    def increment(key: String): Future[Unit]
+}
+
+trait KafkaClient {
+    def push[A](topic: String, message: A): Future[Unit]
+}
+
+trait CustomerInfoClient {
+    type Name = String
+    type Age = Int
+    type Gender = String
+    def getDetails(customerId: String): Future[(Name, Age, Gender)]
+}
+
+def startServer(dependency: RedisClient with KafkaClient with CustomerInfoClient) = ???
+
+/* But `with` is not commutative */
+trait Base {
+    def foo: Any
+}
+trait A extends Base {
+    override def foo: Int = 1
+}
+trait B extends Base {
+    override def foo: Any = "foo"
+}
+
+def func(ab: A with B): Int = ab.foo // This will not compile with Scala2
+
+// def func(ba: B with A): Int = ba.foo
+```
+**Dotty version**
+```scala
+import scala.concurrent.Future
+
+/*
+`&` is similar to `with` in scala 2 when only used as class composition
+*/
+
+trait RedisClient:
+    def increment(key: String): Future[Unit]
+
+trait KafkaClient:
+    def push[A](topic: String, message: A): Future[Unit]
+
+trait CustomerInfoClient:
+    def getName(customerId: String): Future[String]
+/*
+ You can pass along `dependency` to all the handlers. They will be able to accept them as
+ `CustomerInfoClient` or `KafkaClient` or `RedisClient`.
+*/
+def startServer(dependency: RedisClient & KafkaClient & CustomerInfoClient) = ???
+
+/*
+It's different from with in Scala 2 in the sense that `&` is commutative. Unlike with `with` in scala 2,
+both (???: A & B).foo and (???: B & A).foo return type Int
+*/
+
+trait Base:
+    def foo: Any
+trait A extends Base:
+    override def foo: Int = 1
+trait B extends Base:
+    override def foo: Any = "foo"
+
+def func(ab: A & B): Int = ab.foo //returns Int
+
+//def func(ba: B & A): Int = ba.foo //is same as the above and compilation fails
 
 
 ```
@@ -442,35 +598,27 @@ object EnumOps:
   */
 
 ```
-### ExtensionMethods.scala
+### TypeLambdaDemo.scala
 
 **Scala2 version**
 ```scala
-package scala2
-package core
+package scala2.core
 
-/**
-Extension Methods helps developers to add new methods to an existing type
-without having to sub-class it or recompile the original type
-*/
-
-/** 
-In scala2 extension methods were implemented using the implicit class 
-approach
-*/
-
-object RichExtensions {
-  implicit class RichInt(value: Int) {
-    def square = value * value
+object TypeLambdaDemoScala extends App{
+  trait Functor[F[_]]{
+    def map[A,B](a : F[A])(func : A => B) : F[B]
   }
-}
 
-object ExtensionMethodsDemo {
-  import RichExtensions._
+  def functionFunctor[X] = new Functor[({type T[A] = Function1[X,A]})#T]{ //Syntax difficult to understand
+    def map[A,B](a : X => A)(func : A => B) : X => B = a andThen func
+  }
 
-  val intVal = 13
-  val squareVal = intVal.square
-  println(s"Square of $intVal = $squareVal")
+  val stringToInt = (a : String) => a.toInt
+  val intToDouble = (a : Int) => a.toDouble
+ 
+  val composedFunction = functionFunctor[String].map(stringToInt)(intToDouble)
+
+  println(composedFunction("1"))
 }
 ```
 **Dotty version**
@@ -478,107 +626,24 @@ object ExtensionMethodsDemo {
 package dotty
 package core
 
-/**
-Extension Methods helps developers to add new methods to an existing type
-without having to sub-class it or recompile the original type
-*/
+//Annotating a function with @main is enough
 
-/** 
-In dotty extension methods are simple and obvious and does not require any implicit class
-*/
+@main def typeLambdaDemo : Unit = 
+  trait Functor[F[_]]:
+    def map[A,B](a : F[A])(func : A => B) : F[B]
 
-object RichExtensions:
-  def (value: Int) square: Int = value * value
-
-object ExtensionMethodsDemo:
-  import RichExtensions._
-
-  val intVal = 13
-  val squareVal = intVal.square
-  println(s"Square of $intVal = $squareVal")
-```
-### MonadDemo.scala
-
-**Scala2 version**
-```scala
-package scala2.core
-
-import scala2.core.monad.MonadInstances._
-import scala2.core.monad.MonadInterfaceSyntax._  //with this import we will import everything..including the implicits
-import scala2.core.monad.Monad
-import shared.MyClass
-
-object MonadDemo extends App {
-
-  def transform[A,B, F[_] : Monad](value : F[A])(func : A => F[B]) : F[B] = value.flatMap(func)
+  def functionFunctor[X] = 
+    //Much cleaner syntax compared to Scala
+    new Functor[[A] =>> Function1[X,A]]:
+      def map[A,B](a : X =>A)(func : A => B) : X => B = a andThen func
   
-  val myClass : MyClass[Int] = new MyClass(1)
-  val transformerFunc : Int => MyClass[Double] = {(a : Int) => new MyClass(a.toDouble)}
- // val result1 = transform(myClass, transformerFunc)
- // println("flatMap on MyClass")
- // println(result1)
 
+  val stringToInt = (a : String) => a.toInt
+  val intToDouble = (a : Int) => a.toDouble
+ 
+  val composedFunction = functionFunctor[String].map(stringToInt)(intToDouble)
 
-}
-```
-**Dotty version**
-```scala
-package dotty.core
-
-import monad.Monad
-import shared.Id
-import shared.MyClass
-import monad.{given Monad[Id]}      //Import given only
-import monad.{given Monad[MyClass]}
-
-
-def transform[A,B,F[_] : Monad](value : F[A], func : A => F[B]) : F[B] = value.flatMap(func)
-
-//Just annotating a function with @main is enough
-@main def monadDemo : Unit = 
-  val myClass : MyClass[Int] = MyClass(1)
-  val transformerFunc : Int => MyClass[Double] = {(a : Int) => MyClass(a.toDouble)}
-  val result1 = transform(myClass, transformerFunc)
-  println("flatMap on MyClass")
-  println(result1)
-
-  val ida : Id[Int] = 1
-  val transformerId : Int => Double = _.toDouble
-  val result2 = transform(ida, transformerId)
-  println("flatMap on Id")
-  println(result2)
-
-
-```
-### ImplicitsDemo.scala
-
-**Scala2 version**
-```scala
-package scala2.core
-
-import scala2.core.implicits.Conversions._
-import scala.language.implicitConversions // use with care !
-import shared.printInteger
-
-// Look for difference in scala.core.implicits.Conversions.scala
-object ImplicitsDemo extends App {
-  val i = 1
-  printInteger(i)
-}
-```
-**Dotty version**
-```scala
-package dotty.core
-
-import implicits.{given _}
-import scala.language.implicitConversions // use with care !
-import shared.printInteger
-
-// Look for difference in dotty.core.implicits.Conversions.scala
-@main def implicitsDemo : Unit =
-  val i = 1
-  printInteger(i)
-  
+  println(composedFunction("1"))
 ```
 ### ImplicitFunctionTypesDemo.scala
 
@@ -666,6 +731,43 @@ val adminIds: (ec: Environment) ?=> List[Int] =
     given Environment = "staging"
     println(adminIds)
 ```
+### Conversions.scala
+
+**Scala2 version**
+```scala
+package scala2.core.implicits
+import scala.language.implicitConversions
+
+/*
+The explicit null check is only done because we are compiling all the code with dotty with -Yexplicit-nulls flag enabled
+*/
+object Conversions {
+  implicit def int2Integer(i: Int):java.lang.Integer = 
+    java.lang.Integer.valueOf(i) match {
+      case a: Integer => a
+      case null => throw new Exception("Cannot convert null to integer value")
+    }
+}
+```
+**Dotty version**
+```scala
+package dotty.core.implicits
+
+/*Because the usage of Type Conversions often are very problematic,
+ it must be created explicitly in this way:
+ Also notice that the pattern matching. This is required because we have enabled the compiler option -Yexplicit-nulls
+ This has an effect on java interop as well. All the reference types in java are nullable. To keep that consistent with the 
+ Type System of Dotty, the java types are patched with `UncheckedNull`(Unchecked Null is a type alias for Null) 
+ java.lang.Integer.valueOf(_) is returns Integer | UncheckedNull*/
+given Conversion[Int, Integer] = java.lang.Integer.valueOf(_) match
+    case a: java.lang.Integer => a
+    case null => throw new Exception("Can't convert null to Integer value") 
+
+
+// Long version, using alias given:
+// given Conversion[Int, Integer] with
+//  def apply(i: Int): Integer = java.lang.Integer.valueOf(i)
+```
 ### Semigroup.scala
 
 **Scala2 version**
@@ -738,111 +840,51 @@ package semigroup
  
  */
 trait Semigroup[A]:
-  def (a: A) combine (b: A): A
+  extension (a: A) def combine (b: A): A
 
 
 // givens are the instances for the types you are interested in
 object SemigroupInstances:
-  given Semigroup[Int]:
-    def (a: Int) combine (b: Int): Int = a + b
+  given Semigroup[Int] with
+    extension (a: Int) def combine (b: Int): Int = a + b
 
-  given optionSemigroup[A : Semigroup] as  Semigroup[Option[A]]:
-    def (a: Option[A]) combine (b: Option[A]) = 
+  given optionSemigroup[A : Semigroup]: Semigroup[Option[A]] with
+    extension (a: Option[A]) def combine (b: Option[A]) = 
       (a, b) match 
         case (Some(aVal), Some(bVal)) => Some(aVal.combine(bVal))
         case (Some(aVal), None) => Some(aVal)
         case (None, Some(bVal)) => Some(bVal)
         case (None, None) => None
 ```
-### TypeLambdaDemo.scala
+### ImplicitsDemo.scala
 
 **Scala2 version**
 ```scala
 package scala2.core
 
-object TypeLambdaDemoScala extends App{
-  trait Functor[F[_]]{
-    def map[A,B](a : F[A])(func : A => B) : F[B]
-  }
+import scala2.core.implicits.Conversions._
+import scala.language.implicitConversions // use with care !
+import shared.printInteger
 
-  def functionFunctor[X] = new Functor[({type T[A] = Function1[X,A]})#T]{ //Syntax difficult to understand
-    def map[A,B](a : X => A)(func : A => B) : X => B = a andThen func
-  }
-
-  val stringToInt = (a : String) => a.toInt
-  val intToDouble = (a : Int) => a.toDouble
- 
-  val composedFunction = functionFunctor[String].map(stringToInt)(intToDouble)
-
-  println(composedFunction("1"))
+// Look for difference in scala.core.implicits.Conversions.scala
+object ImplicitsDemo extends App {
+  val i = 1
+  printInteger(i)
 }
 ```
 **Dotty version**
 ```scala
-package dotty
-package core
+package dotty.core
 
-//Annotating a function with @main is enough
+import implicits.{given}
+import scala.language.implicitConversions // use with care !
+import shared.printInteger
 
-@main def typeLambdaDemo : Unit = 
-  trait Functor[F[_]]:
-    def map[A,B](a : F[A])(func : A => B) : F[B]
-
-  def functionFunctor[X] = 
-    //Much cleaner syntax compared to Scala
-    new Functor[[A] =>> Function1[X,A]]:
-      def map[A,B](a : X =>A)(func : A => B) : X => B = a andThen func
+// Look for difference in dotty.core.implicits.Conversions.scala
+@main def implicitsDemo : Unit =
+  val i = 1
+  printInteger(i)
   
-
-  val stringToInt = (a : String) => a.toInt
-  val intToDouble = (a : Int) => a.toDouble
- 
-  val composedFunction = functionFunctor[String].map(stringToInt)(intToDouble)
-
-  println(composedFunction("1"))
-```
-### Monad.scala
-
-**Scala2 version**
-```scala
-package scala2.core.monad
-import shared.MyClass
-
-
-
-trait Monad[F[_]]{
-  def pure[A](a : A) : F[A]
-
-  def flatMap[A,B](value : F[A])(func : A => F[B]) : F[B]
-
-  def map[A,B](value : F[A])(func : A => B) : F[B] = flatMap(value)(func andThen pure)
-}
-
-object MonadInstances{
-  implicit def myclassMonadInstance : Monad[MyClass] = new Monad[MyClass]{
-    def pure[A](a : A) : MyClass[A] = new MyClass(a)
-
-    def flatMap[A,B](value : MyClass[A])(func : A => MyClass[B]) : MyClass[B] = func(value.value)
-  }
-}
-
-object MonadInterfaceSyntax{
-  implicit class MonadOps[F[_] : Monad, A](value : F[A]){
-    def flatMap[B](func : A => F[B]) : F[B] = implicitly[Monad[F]].flatMap(value)(func)
-  }
-}
-```
-**Dotty version**
-```scala
-package monad
-
-trait Monad[F[_]]:
-  def [A](a : A) identity : F[A]
-
-  def [A,B](a : F[A]) flatMap(func : A => F[B]) : F[B]
-
-  def [A,B](a : F[A]) map(func : A => B) : F[B] = a.flatMap(func andThen identity)
-
 ```
 ### ExplicitNullsDemo.scala
 
@@ -875,48 +917,6 @@ package core
     How do you get java interop to work with -Yexplicit-nulls compiler flag?
     When a java class is loaded, either from source or bytecode, it's types are patched so that they remain nullable.
     The patching is done by making are referrence types nullable. UncheckedNull is a type alias for Null.*/
-    val baz: java.lang.Integer | UncheckedNull = java.lang.Integer.valueOf(0)
-
-```
-### DependentFunctionTypesDemo.scala
-
-**Scala2 version**
-```scala
-package scala2
-package core
-
-trait Foo{
-  type Baz
-  val baz : Baz
-}
-
-//This is dependant method type. This works.
-def extractBaz(f : Foo) : f.Baz = f.baz
-
-//But what if you wanted a function type for extractBax?
-//That is not possible with Scala 2 because there is no type that could describe it.
-//https://dotty.epfl.ch/docs/reference/new-types/dependent-function-types.html
-
-val bazExtractor : (f : Foo) => f.Baz = extractBaz  // This will not compile with Scala 2
-```
-**Dotty version**
-```scala
-package dotty
-package core
-
-trait Foo:
-  type Baz
-  val baz : Baz
-
-// This is dependent method type. This works in Scala 2 as well
-def extractBaz(f : Foo) : f.Baz = f.baz
-
-// But what if you wanted a function type for extractBaz?
-// It was not possible to do that in Scala 2.
-// But with dependent function types introduced in dotty, this is possible.
-// Read more about dependent function types here
-// https://dotty.epfl.ch/docs/reference/new-types/dependent-function-types.html
-
-val bazExtractor : (f : Foo) => f.Baz = extractBaz
+    val baz: java.lang.Integer | Null = java.lang.Integer.valueOf(0)
 
 ```
