@@ -1,6 +1,6 @@
 package dotty.core
 
-import implicits.{given _}
+import implicits.{given}
 import scala.language.implicitConversions // use with care !
 import shared.printInteger
 

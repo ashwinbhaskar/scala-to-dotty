@@ -32,5 +32,5 @@ trait B extends Base:
 
 def func(ab: A & B): Int = ab.foo //returns Int
 
-def func(ba: B & A): Int = ba.foo //return Int
+//def func(ba: B & A): Int = ba.foo //is same as the above and compilation fails
 

@@ -16,4 +16,4 @@ package core
     How do you get java interop to work with -Yexplicit-nulls compiler flag?
     When a java class is loaded, either from source or bytecode, it's types are patched so that they remain nullable.
     The patching is done by making are referrence types nullable. UncheckedNull is a type alias for Null.*/
-    val baz: java.lang.Integer | UncheckedNull = java.lang.Integer.valueOf(0)
+    val baz: java.lang.Integer | Null = java.lang.Integer.valueOf(0)

@@ -11,16 +11,16 @@ package semigroup
  
  */
 trait Semigroup[A]:
-  def (a: A) combine (b: A): A
+  extension (a: A) def combine (b: A): A
 
 
 // givens are the instances for the types you are interested in
 object SemigroupInstances:
-  given Semigroup[Int]:
-    def (a: Int) combine (b: Int): Int = a + b
+  given Semigroup[Int] with
+    extension (a: Int) def combine (b: Int): Int = a + b
 
-  given optionSemigroup[A : Semigroup] as  Semigroup[Option[A]]:
-    def (a: Option[A]) combine (b: Option[A]) = 
+  given optionSemigroup[A : Semigroup]: Semigroup[Option[A]] with
+    extension (a: Option[A]) def combine (b: Option[A]) = 
       (a, b) match 
         case (Some(aVal), Some(bVal)) => Some(aVal.combine(bVal))
         case (Some(aVal), None) => Some(aVal)

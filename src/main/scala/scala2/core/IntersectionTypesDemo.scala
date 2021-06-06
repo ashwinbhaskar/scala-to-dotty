@@ -32,4 +32,4 @@ trait B extends Base {
 
 def func(ab: A with B): Int = ab.foo // This will not compile with Scala2
 
-def func(ba: B with A): Int = ba.foo    //return Int
+// def func(ba: B with A): Int = ba.foo
